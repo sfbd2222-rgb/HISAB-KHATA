@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Byaktigoto Hisab Bebosthapona</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f4f6f9; padding: 12px; color: #333; }
+    .container { max-width: 500px; margin: 0 auto; }
+    
+    #auth-section {
+      background: #fff; padding: 20px; border-radius: 12px; margin-top: 40px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center;
+    }
+    #auth-section h2 { color: #1e3c72; margin-bottom: 15px; font-size: 20px; }
+    
+    .header {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #fff; padding: 16px; border-radius: 12px; margin-bottom: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15); position: relative;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .header h2 { font-size: 16px; text-align: center; flex: 1; }
+    
+    .menu-icon { font-size: 22px; cursor: pointer; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; user-select: none; }
+    .dropdown-menu {
+      display: none; position: absolute; right: 16px; top: 55px; background: #fff; color: #333;
+      width: 220px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 100; overflow: hidden;
+    }
+    .dropdown-menu button {
+      width: 100%; padding: 12px 16px; text-align: left; background: none; border: none;
+      border-bottom: 1px solid #eee; font-size: 13px; font-weight: bold; cursor: pointer; color: #333;
+    }
+    .dropdown-menu button:hover { background: #f4f6f9; }
+    .dropdown-menu .logout-btn { color: #e74c3c; border-bottom: none; }
+
+    .balance-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
+    .balance-box { background: rgba(255,255,255,0.15); padding: 8px; border-radius: 8px; text-align: center; }
+    .balance-box span { font-size: 11px; opacity: 0.9; display: block; }
+    .balance-box h3 { font-size: 14px; margin-top: 2px; }
+
+    .card { background: #fff; padding: 14px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .card h3 { font-size: 15px; margin-bottom: 10px; color: #1e3c72; border-bottom: 2px solid #f0f2f5; padding-bottom: 5px; }
+    
+    .form-group { margin-bottom: 10px; text-align: left; }
+    .form-group label { display: block; font-size: 12px; margin-bottom: 4px; color: #555; font-weight: 600; }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; outline: none; }
+    
+    .quick-cat-container { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+    .quick-cat-btn { background: #e0e6ed; border: none; border-radius: 4px; padding: 3px 8px; font-size: 11px; cursor: pointer; color: #333; }
+    .quick-cat-btn:hover { background: #1e3c72; color: #fff; }
+
+    .btn { width: 100%; padding: 11px; background: #27ae60; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; }
+    .btn:disabled { background: #95a5a6; cursor: not-allowed; }
+    .btn-filter { background: #2980b9; margin-top: 5px; }
+
+    .filter-box { display: flex; gap: 8px; }
+    .filter-box .form-group { flex: 1; }
+
+    .tab-menu { display: flex; gap: 5px; margin-bottom: 12px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: #e0e6ed; color: #333; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .tab-btn.active { background: #1e3c72; color: #fff; }
+
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .history-item:last-child { border-bottom: none; }
+    .item-details { font-size: 12px; }
+    .item-details small { color: #777; font-size: 10px; }
+    .receipt-link { font-size: 10px; color: #2980b9; text-decoration: underline; cursor: pointer; }
+
+    .amt-income { color: #27ae60; font-weight: bold; font-size: 13px; }
+    .amt-exp { color: #c0392b; font-weight: bold; font-size: 13px; }
+    .amt-giv { color: #e67e22; font-weight: bold; font-size: 13px; }
+
+    #app-content { display: none; }
+
+    /* PDF Print Table Styling */
+    .print-section { margin-top: 15px; }
+    .print-section-title { font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1e3c72; border-bottom: 1px solid #1e3c72; padding-bottom: 2px; }
+    .print-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    .print-table th, .print-table td { border: 1px solid #bbb; padding: 5px; text-align: left; font-size: 11px; }
+    .print-table th { background-color: #f2f2f2; font-weight: bold; }
+    .print-table .subtotal-row td { font-weight: bold; background-color: #fafafa; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printable-area, #printable-area * { visibility: visible; }
+      #printable-area { position: absolute; left: 0; top: 0; width: 100%; padding: 15px; background: #fff; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <button class="btn" style="background:#34495e; font-size:11px; padding:6px; width:auto; margin-bottom:10px;" onclick="toggleLanguage()" id="lang-btn">English / বাংলা</button>
+  <div style="clear: both;"></div>
+
+  <!-- Login Section -->
+  <div id="auth-section">
+    <h2 id="txt-login-title">🔐 হিসাব খাতা লগইন</h2>
+    <form id="auth-form">
+      <div class="form-group">
+        <label id="txt-lbl-user">আপনার নাম / ইউজারনেম</label>
+        <input type="text" id="auth-user" placeholder="আপনার নাম লিখুন" required>
+      </div>
+      <div class="form-group">
+        <label id="txt-lbl-pass">পাসওয়ার্ড</label>
+        <input type="password" id="auth-pass" placeholder="পাসওয়ার্ড দিন" required>
+      </div>
+      <button type="submit" class="btn" id="auth-btn">লগইন করুন</button>
+      <p id="auth-error" style="color:red; font-size:12px; margin-top:10px; display:none;"></p>
+    </form>
+  </div>
+
+  <!-- Main App Content -->
+  <div id="app-content">
+    <div class="no-print">
+      <div class="header">
+        <div class="header-top">
+          <h2>🏢 <span id="txt-app-name">ব্যক্তিগত হিসাব খাতা</span> (<span id="user-display"></span>)</h2>
+          <div class="menu-icon" onclick="toggleMenu()">☰</div>
+        </div>
+
+        <div class="dropdown-menu" id="dropdownMenu">
+          <button onclick="closeMonthlyAccount(); toggleMenu();" id="txt-m-close">🔒 মাসিক হিসাব ক্লোজ করুন</button>
+          <button onclick="changePassword(); toggleMenu();" id="txt-m-pass">🔑 পাসওয়ার্ড পরিবর্তন</button>
+          <button onclick="window.print(); toggleMenu();" id="txt-m-print">📥 পিডিএফ প্রিন্ট</button>
+          <button class="logout-btn" onclick="logout()" id="txt-m-logout">🚪 লগআউট</button>
+        </div>
+
+        <div class="balance-grid">
+          <div class="balance-box">
+            <span id="txt-b-inc">মোট রেন্ট কালেকশন</span>
+            <h3 id="tot-income">0.00</h3>
+          </div>
+          <div class="balance-box">
+            <span id="txt-b-exp">মোট খরচ</span>
+            <h3 id="tot-expense">0.00</h3>
+          </div>
+          <div class="balance-box">
+            <span id="txt-b-giv">মুদিকে প্রদান</span>
+            <h3 id="tot-given">0.00</h3>
+          </div>
+          <div class="balance-box">
+            <span id="txt-b-bal">অবশিষ্ট ব্যালেন্স</span>
+            <h3 id="tot-balance">0.00</h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-menu">
+        <button class="tab-btn active" id="tab-active-btn" onclick="switchTab('active')">📊 সক্রিয় হিসাব</button>
+        <button class="tab-btn" id="tab-closed-btn" onclick="switchTab('closed')">🔒 ক্লোজড হিস্ট্রি</button>
+      </div>
+
+      <div class="card">
+        <h3 id="txt-filter-title">📅 তারিখ ফিল্টার</h3>
+        <div class="filter-box">
+          <div class="form-group">
+            <label id="txt-from">তারিখ হতে (From):</label>
+            <input type="date" id="filter-from">
+          </div>
+          <div class="form-group">
+            <label id="txt-to">তারিখ পর্যন্ত (To):</label>
+            <input type="date" id="filter-to">
+          </div>
+        </div>
+        <button class="btn btn-filter" onclick="applyFilter()" id="txt-btn-filter">হিসাব দেখুন</button>
+      </div>
+
+      <div class="card" id="add-entry-card">
+        <h3 id="txt-add-title">➕ নতুন হিসাব যোগ করুন</h3>
+        <form id="entry-form">
+          <div class="form-group">
+            <label id="txt-type">লেনদেনের ধরন</label>
+            <select id="type" required>
+              <option value="Expense" selected>বিভিন্ন খরচ (Expense)</option>
+              <option value="Cash Given">মুদিকে প্রদান (Cash Given)</option>
+              <option value="Income">রেন্ট কালেকশন (Income)</option>
+            </select>
+          </div>
+
+          <div class="filter-box">
+            <div class="form-group">
+              <label id="txt-date">তারিখ</label>
+              <input type="date" id="date" required>
+            </div>
+            <div class="form-group">
+              <label id="txt-cat">খাত / ক্যাটাগরি</label>
+              <input type="text" id="category" placeholder="যেমন: রুম রেন্ট, বাজার" list="cat-suggestions" required>
+              <datalist id="cat-suggestions">
+                <option value="রুম রেন্ট">
+                <option value="বাজার">
+                <option value="ইলেকট্রিক বিল">
+                <option value="ওয়াইফাই বিল">
+                <option value="মেইনটেন্যান্স">
+                <option value="ক্যাশ প্রদান">
+              </datalist>
+              <div class="quick-cat-container">
+                <button type="button" class="quick-cat-btn" onclick="setQuickCat('রুম রেন্ট')">রুম রেন্ট</button>
+                <button type="button" class="quick-cat-btn" onclick="setQuickCat('বাজার')">বাজার</button>
+                <button type="button" class="quick-cat-btn" onclick="setQuickCat('ইলেকট্রিক বিল')">বিল</button>
+                <button type="button" class="quick-cat-btn" onclick="setQuickCat('মেইনটেন্যান্স')">মেইনটেন্যান্স</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label id="txt-amt">টাকার পরিমাণ</label>
+            <input type="number" step="0.01" id="amount" placeholder="0.00" required>
+          </div>
+
+          <div class="form-group">
+            <label id="txt-desc">বিবরণ</label>
+            <input type="text" id="description" placeholder="বিস্তারিত বিবরণ লিখুন">
+          </div>
+
+          <div class="form-group">
+            <label id="txt-receipt">রসিদ / ছবি (ক্যামেরা বা গ্যালারি)</label>
+            <input type="file" id="receipt" accept="image/*" capture="environment">
+          </div>
+
+          <button type="submit" class="btn" id="txt-sub-btn">সংরক্ষণ করুন</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3 id="list-title">📋 লেনদেনের তালিকা</h3>
+        <div class="form-group" style="margin-top: 5px;">
+          <input type="text" id="search-box" placeholder="খুঁজুন (Search)..." oninput="applyFilter()">
+        </div>
+        <div id="loader" style="text-align:center; padding:10px; font-size:12px;">ডেটা লোড হচ্ছে...</div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <!-- Printable Statement Area -->
+    <div id="printable-area">
+      <h2 style="text-align: center; margin-bottom: 4px;" id="print-main-title">মাসিক রেন্ট ও খরচ হিসাব বিবরণী (<span id="print-user"></span>)</h2>
+      <p style="text-align: center; font-size: 11px; color: #555;" id="print-period-text">সময়কাল: সকল হিসাব</p>
+      <hr style="margin: 8px 0;">
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 12px; font-size: 11px; text-align: center; background: #f9f9f9; padding: 6px; border: 1px solid #ddd;">
+        <div><strong>মোট রেন্ট:</strong><br><span id="p-inc">0.00</span></div>
+        <div><strong>মোট খরচ:</strong><br><span id="p-exp">0.00</span></div>
+        <div><strong>মুদিকে প্রদান:</strong><br><span id="p-giv">0.00</span></div>
+        <div><strong>অবশিষ্ট:</strong><br><span id="p-bal">0.00</span></div>
+      </div>
+
+      <!-- PDF Printable Tables Separated by Categories -->
+      <div class="print-section">
+        <div class="print-section-title" id="sec-title-inc">📥 রেন্ট কালেকশন (Income)</div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th id="th-date-1">তারিখ</th>
+              <th id="th-cat-1">ক্যাটাগরি</th>
+              <th id="th-desc-1">বিবরণ</th>
+              <th id="th-amt-1" style="text-align:right;">টাকা</th>
+            </tr>
+          </thead>
+          <tbody id="print-inc-body"></tbody>
+        </table>
+      </div>
+
+      <div class="print-section">
+        <div class="print-section-title" id="sec-title-exp">📤 বিভিন্ন খরচ (Expense)</div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th id="th-date-2">তারিখ</th>
+              <th id="th-cat-2">ক্যাটাগরি</th>
+              <th id="th-desc-2">বিবরণ</th>
+              <th id="th-amt-2" style="text-align:right;">টাকা</th>
+            </tr>
+          </thead>
+          <tbody id="print-exp-body"></tbody>
+        </table>
+      </div>
+
+      <div class="print-section">
+        <div class="print-section-title" id="sec-title-giv">🤝 মুদিকে প্রদান (Cash Given)</div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th id="th-date-3">তারিখ</th>
+              <th id="th-cat-3">ক্যাটাগরি</th>
+              <th id="th-desc-3">বিবরণ</th>
+              <th id="th-amt-3" style="text-align:right;">টাকা</th>
+            </tr>
+          </thead>
+          <tbody id="print-giv-body"></tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxyqJ5NfSJhi14kqoiBeigaoqR5EGFNdGNVMniblOWaKNn2zY7Rix5REnQPzFZcExE/exec";
+  let rawServerData = [];
+  let currentUser = localStorage.getItem("current_user") || "";
+  let currentViewMode = "active";
+  let currentLang = localStorage.getItem("app_lang") || "bn";
+
+  const langData = {
+    bn: {
+      loginTitle: "🔐 হিসাব খাতা লগইন", lblUser: "আপনার নাম / ইউজারনেম", lblPass: "পাসওয়ার্ড", btnLogin: "লগইন করুন",
+      appName: "ব্যক্তিগত হিসাব খাতা", bInc: "মোট রেন্ট কালেকশন", bExp: "মোট খরচ", bGiv: "মুদিকে প্রদান", bBal: "অবশিষ্ট ব্যালেন্স",
+      tabActive: "📊 সক্রিয় হিসাব", tabClosed: "🔒 ক্লোজড হিস্ট্রি", filterTitle: "📅 তারিখ ফিল্টার",
+      from: "তারিখ হতে (From):", to: "তারিখ পর্যন্ত (To):", btnFilter: "হিসাব দেখুন",
+      mClose: "🔒 মাসিক হিসাব ক্লোজ করুন", mPass: "🔑 পাসওয়ার্ড পরিবর্তন", mPrint: "📥 পিডিএফ প্রিন্ট", mLogout: "🚪 লগআউট",
+      addTitle: "➕ নতুন হিসাব যোগ করুন", type: "লেনদেনের ধরন", date: "তারিখ", cat: "খাত / ক্যাটাগরি", amt: "টাকার পরিমাণ", desc: "বিবরণ", receipt: "রসিদ / ছবি (ক্যামেরা বা গ্যালারি)",
+      subBtn: "সংরক্ষণ করুন", listTitle: "📋 লেনদেনের তালিকা", printTitle: "মাসিক রেন্ট ও খরচ হিসাব বিবরণী",
+      thDate: "তারিখ", thType: "ধরন", thCat: "ক্যাটাগরি", thDesc: "বিবরণ", thAmt: "টাকা",
+      secInc: "📥 রেন্ট কালেকশন (Income)", secExp: "📤 বিভিন্ন খরচ (Expense)", secGiv: "🤝 মুদিকে প্রদান (Cash Given)"
+    },
+    en: {
+      loginTitle: "🔐 Account Login", lblUser: "Your Name / Username", lblPass: "Password", btnLogin: "Login",
+      appName: "Personal Expense System", bInc: "Total Rent Collection", bExp: "Total Expense", bGiv: "Given to Mudir", bBal: "Remaining Balance",
+      tabActive: "📊 Active Accounts", tabClosed: "🔒 Closed History", filterTitle: "📅 Date Filter",
+      from: "From Date:", to: "To Date:", btnFilter: "View Account",
+      mClose: "🔒 Close Monthly Account", mPass: "🔑 Change Password", mPrint: "📥 Print PDF", mLogout: "Logout",
+      addTitle: "➕ Add New Entry", type: "Transaction Type", date: "Date", cat: "Category", amt: "Amount", desc: "Description", receipt: "Receipt / Photo (Camera/Gallery)",
+      subBtn: "Save Entry", listTitle: "📋 Transaction List", printTitle: "Monthly Rent & Expense Statement",
+      thDate: "Date", thType: "Type", thCat: "Category", thDesc: "Description", thAmt: "Amount",
+      secInc: "📥 Rent Collection (Income)", secExp: "📤 Expense Details", secGiv: "🤝 Cash Given to Mudir"
+    }
+  };
+
+  function setQuickCat(categoryName) {
+    document.getElementById('category').value = categoryName;
+  }
+
+  function updateLanguageUI() {
+    let t = langData[currentLang];
+    document.getElementById('txt-login-title').innerText = t.loginTitle;
+    document.getElementById('txt-lbl-user').innerText = t.lblUser;
+    document.getElementById('txt-lbl-pass').innerText = t.lblPass;
+    document.getElementById('auth-btn').innerText = t.btnLogin;
+    document.getElementById('txt-app-name').innerText = t.appName;
+    document.getElementById('txt-b-inc').innerText = t.bInc;
+    document.getElementById('txt-b-exp').innerText = t.bExp;
+    document.getElementById('txt-b-giv').innerText = t.bGiv;
+    document.getElementById('txt-b-bal').innerText = t.bBal;
+    document.getElementById('tab-active-btn').innerText = t.tabActive;
+    document.getElementById('tab-closed-btn').innerText = t.tabClosed;
+    document.getElementById('txt-filter-title').innerText = t.filterTitle;
+    document.getElementById('txt-from').innerText = t.from;
+    document.getElementById('txt-to').innerText = t.to;
+    document.getElementById('txt-btn-filter').innerText = t.btnFilter;
+    document.getElementById('txt-m-close').innerText = t.mClose;
+    document.getElementById('txt-m-pass').innerText = t.mPass;
+    document.getElementById('txt-m-print').innerText = t.mPrint;
+    document.getElementById('txt-m-logout').innerText = t.mLogout;
+    document.getElementById('txt-add-title').innerText = t.addTitle;
+    document.getElementById('txt-type').innerText = t.type;
+    document.getElementById('txt-date').innerText = t.date;
+    document.getElementById('txt-cat').innerText = t.cat;
+    document.getElementById('txt-amt').innerText = t.amt;
+    document.getElementById('txt-desc').innerText = t.desc;
+    document.getElementById('txt-receipt').innerText = t.receipt;
+    document.getElementById('txt-sub-btn').innerText = t.subBtn;
+    document.getElementById('print-main-title').innerText = t.printTitle + ` (${currentUser})`;
+
+    document.getElementById('sec-title-inc').innerText = t.secInc;
+    document.getElementById('sec-title-exp').innerText = t.secExp;
+    document.getElementById('sec-title-giv').innerText = t.secGiv;
+
+    ['1','2','3'].forEach(i => {
+      document.getElementById('th-date-' + i).innerText = t.thDate;
+      document.getElementById('th-cat-' + i).innerText = t.thCat;
+      document.getElementById('th-desc-' + i).innerText = t.thDesc;
+      document.getElementById('th-amt-' + i).innerText = t.thAmt;
+    });
+  }
+
+  function toggleLanguage() {
+    currentLang = currentLang === "bn" ? "en" : "bn";
+    localStorage.setItem("app_lang", currentLang);
+    updateLanguageUI();
+    applyFilter();
+  }
+
+  function toggleMenu() {
+    const menu = document.getElementById('dropdownMenu');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  }
+
+  window.onclick = function(event) {
+    if (!event.target.matches('.menu-icon')) {
+      const menu = document.getElementById('dropdownMenu');
+      if (menu && menu.style.display === 'block') {
+        menu.style.display = 'none';
+      }
+    }
+  }
+
+  if(currentUser) {
+    showApp(currentUser);
+  }
+
+  document.getElementById('auth-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = document.getElementById('auth-user').value.trim();
+    const pass = document.getElementById('auth-pass').value.trim();
+    const errBox = document.getElementById('auth-error');
+    const btn = document.getElementById('auth-btn');
+
+    if(!user) return;
+    btn.disabled = true;
+    btn.innerText = "Checking...";
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: "verify_password", username: user, password: pass })
+      });
+      const text = await res.text();
+      
+      if(text === "MATCH") {
+        localStorage.setItem("current_user", user);
+        showApp(user);
+      } else {
+        errBox.innerText = currentLang === "bn" ? "ভুল পাসওয়ার্ড!" : "Incorrect password!";
+        errBox.style.display = 'block';
+      }
+    } catch(err) {
+      errBox.innerText = "Error connecting!";
+      errBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.innerText = langData[currentLang].btnLogin;
+    }
+  });
+
+  function showApp(user) {
+    currentUser = user;
+    document.getElementById('auth-section').style.display = 'none';
+    document.getElementById('app-content').style.display = 'block';
+    document.getElementById('user-display').innerText = user;
+    document.getElementById('print-user').innerText = user;
+    document.getElementById('date').valueAsDate = new Date();
+    updateLanguageUI();
+    loadData();
+  }
+
+  function logout() {
+    localStorage.removeItem("current_user");
+    location.reload();
+  }
+
+  function switchTab(mode) {
+    currentViewMode = mode;
+    document.getElementById('tab-active-btn').classList.toggle('active', mode === 'active');
+    document.getElementById('tab-closed-btn').classList.toggle('active', mode === 'closed');
+    
+    if(mode === 'closed') {
+      document.getElementById('add-entry-card').style.display = 'none';
+      document.getElementById('list-title').innerText = currentLang === "bn" ? '🔒 ক্লোজড লেনদেনের হিস্ট্রি' : '🔒 Closed History';
+    } else {
+      document.getElementById('add-entry-card').style.display = 'block';
+      document.getElementById('list-title').innerText = currentLang === "bn" ? '📋 সক্রিয় লেনদেনের তালিকা' : '📋 Transaction List';
+    }
+    applyFilter();
+  }
+
+  async function loadData() {
+    const loader = document.getElementById('loader');
+    loader.style.display = 'block';
+    try {
+      const resUser = await fetch(`${SCRIPT_URL}?user=${encodeURIComponent(currentUser)}`);
+      rawServerData = await resUser.json();
+      rawServerData.sort((a, b) => new Date(a.date) - new Date(b.date));
+      applyFilter();
+    } catch(e) {
+      document.getElementById('history-list').innerHTML = '<p style="color:red; font-size:12px;">Data load error!</p>';
+    } finally {
+      loader.style.display = 'none';
+    }
+  }
+
+  function getBase64(file) {
+    return new Promise((resolve, reject) => {
+      if(!file) resolve("");
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  function applyFilter() {
+    const from = document.getElementById('filter-from').value;
+    const to = document.getElementById('filter-to').value;
+    const searchVal = document.getElementById('search-box').value.toLowerCase();
+    const list = document.getElementById('history-list');
+    
+    const pIncBody = document.getElementById('print-inc-body');
+    const pExpBody = document.getElementById('print-exp-body');
+    const pGivBody = document.getElementById('print-giv-body');
+
+    list.innerHTML = '';
+    pIncBody.innerHTML = '';
+    pExpBody.innerHTML = '';
+    pGivBody.innerHTML = '';
+
+    let totalInc = 0, totalExp = 0, totalGiv = 0;
+
+    let filtered = rawServerData.filter(item => {
+      if(!item.date) return false;
+      let cleanDate = item.date.toString().split('T')[0];
+      
+      let isClosed = item.closeDate && item.closeDate.toString().trim() !== "";
+      if(currentViewMode === "active" && isClosed) return false;
+      if(currentViewMode === "closed" && !isClosed) return false;
+
+      if(from && cleanDate < from) return false;
+      if(to && cleanDate > to) return false;
+
+      if(searchVal) {
+        let matchCat = item.category ? item.category.toLowerCase().includes(searchVal) : false;
+        let matchDesc = item.description ? item.description.toLowerCase().includes(searchVal) : false;
+        let matchAmt = item.amount ? item.amount.toString().includes(searchVal) : false;
+        if(!matchCat && !matchDesc && !matchAmt) return false;
+      }
+      return true;
+    });
+
+    filtered.forEach(item => {
+      const amt = parseFloat(item.amount) || 0;
+      let cleanDate = item.date ? item.date.toString().split('T')[0] : '';
+      let styleClass = item.type === 'Income' ? 'amt-income' : (item.type === 'Expense' ? 'amt-exp' : 'amt-giv');
+      let typeLabel = item.type === 'Income' ? (currentLang === "bn" ? 'রেন্ট' : 'Rent') : (item.type === 'Expense' ? (currentLang === "bn" ? 'খরচ' : 'Expense') : 'Cash Given');
+
+      // Add to Screen List View
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML = `
+        <div class="item-details">
+          <strong>${item.category}</strong> (${typeLabel})<br>
+          <small>${cleanDate} | ${item.description || '-'}</small>
+          ${item.closeDate ? `<br><small style="color:#8e44ad;">[Close: ${item.closeDate}]</small>` : ''}
+          ${item.receipt ? `<br><a class="receipt-link" href="${item.receipt}" target="_blank">📄 Receipt</a>` : ''}
+        </div>
+        <div class="${styleClass}">${amt.toFixed(2)}</div>
+      `;
+      list.appendChild(div);
+
+      // Separate rows for print table
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${cleanDate}</td>
+        <td>${item.category}</td>
+        <td>${item.description || '-'}</td>
+        <td style="text-align:right;">${amt.toFixed(2)}</td>
+      `;
+
+      if(item.type === 'Income') {
+        totalInc += amt;
+        pIncBody.appendChild(tr);
+      } else if(item.type === 'Expense') {
+        totalExp += amt;
+        pExpBody.appendChild(tr);
+      } else if(item.type === 'Cash Given') {
+        totalGiv += amt;
+        pGivBody.appendChild(tr);
+      }
+    });
+
+    // Add Subtotal Rows in Printable PDF
+    appendSubtotal(pIncBody, totalInc);
+    appendSubtotal(pExpBody, totalExp);
+    appendSubtotal(pGivBody, totalGiv);
+
+    const netBalance = totalInc - (totalExp + totalGiv);
+
+    document.getElementById('tot-income').innerText = totalInc.toFixed(2);
+    document.getElementById('tot-expense').innerText = totalExp.toFixed(2);
+    document.getElementById('tot-given').innerText = totalGiv.toFixed(2);
+    document.getElementById('tot-balance').innerText = netBalance.toFixed(2);
+
+    document.getElementById('p-inc').innerText = totalInc.toFixed(2);
+    document.getElementById('p-exp').innerText = totalExp.toFixed(2);
+    document.getElementById('p-giv').innerText = totalGiv.toFixed(2);
+    document.getElementById('p-bal').innerText = netBalance.toFixed(2);
+  }
+
+  function appendSubtotal(tbody, total) {
+    if(tbody.children.length === 0) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.innerHTML = `<td colspan="4" style="text-align:center; color:#999;">- No Data -</td>`;
+      tbody.appendChild(emptyRow);
+      return;
+    }
+    const tr = document.createElement('tr');
+    tr.className = 'subtotal-row';
+    tr.innerHTML = `
+      <td colspan="3" style="text-align:right;"><strong>Subtotal:</strong></td>
+      <td style="text-align:right;"><strong>${total.toFixed(2)}</strong></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  async function changePassword() {
+    let newPass = prompt(currentLang === "bn" ? "নতুন পাসওয়ার্ড দিন:" : "Enter new password:");
+    if(!newPass) return;
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: "change_password", username: currentUser, newPassword: newPass })
+      });
+      alert(currentLang === "bn" ? "পাসওয়ার্ড সফলভাবে পরিবর্তিত হয়েছে!" : "Password changed successfully!");
+    } catch(err) {
+      alert("Error!");
+    }
+  }
+
+  async function closeMonthlyAccount() {
+    const from = document.getElementById('filter-from').value;
+    const to = document.getElementById('filter-to').value;
+
+    if(!from || !to) {
+      alert(currentLang === "bn" ? "দয়া করে তারিখ সিলেক্ট করুন!" : "Please select date range!");
+      return;
+    }
+
+    let passwordInput = prompt(currentLang === "bn" ? "মাসিক হিসাব ক্লোজ করার জন্য পাসওয়ার্ড দিন:" : "Enter password to close account:");
+    if(!passwordInput) return;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const bal = document.getElementById('p-bal').innerText;
+    const inc = document.getElementById('p-inc').innerText;
+    const exp = document.getElementById('p-exp').innerText;
+
+    const payload = {
+      action: "close_account",
+      username: currentUser,
+      fromDate: from,
+      toDate: to,
+      closeDate: todayStr,
+      balance: bal,
+      income: inc,
+      expense: exp
+    };
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+
+      alert(currentLang === "bn" ? "হিসাব ক্লোজ হয়েছে এবং জিমেইলে ব্যাকআপ পাঠানো হয়েছে!" : "Account closed and email backup sent!");
+      setTimeout(loadData, 2000);
+    } catch(err) {
+      alert("Error closing account!");
+    }
+  }
+
+  // Double Submit Protection Add
+  document.getElementById('entry-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const subBtn = document.getElementById('txt-sub-btn');
+    
+    // Disable button to prevent double save
+    subBtn.disabled = true;
+    const originalText = subBtn.innerText;
+    subBtn.innerText = currentLang === "bn" ? "সংরক্ষণ করা হচ্ছে..." : "Saving...";
+
+    const fileInput = document.getElementById('receipt');
+    let receiptBase64 = "";
+    if(fileInput.files.length > 0) {
+      receiptBase64 = await getBase64(fileInput.files[0]);
+    }
+
+    const payload = {
+      username: currentUser,
+      type: document.getElementById('type').value,
+      date: document.getElementById('date').value,
+      category: document.getElementById('category').value,
+      amount: document.getElementById('amount').value,
+      description: document.getElementById('description').value,
+      receipt: receiptBase64
+    };
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+      alert(currentLang === "bn" ? "সফলভাবে সংরক্ষিত হয়েছে!" : "Saved successfully!");
+      document.getElementById('entry-form').reset();
+      document.getElementById('date').valueAsDate = new Date();
+      setTimeout(loadData, 1200);
+    } catch(err) {
+      alert("Error saving!");
+    } finally {
+      subBtn.disabled = false;
+      subBtn.innerText = originalText;
+    }
+  });
+
+  updateLanguageUI();
+</script>
+
+</body>
+</html>
